@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>그림 퍼즐 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #4ecdc4;
+        }
+
+        .score-box {
+            text-align: right;
+        }
+
+        .score {
+            font-size: 2em;
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .ai-info {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ai-info h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature-bar {
+            background: white;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .feature-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .puzzle-area {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .puzzle-piece {
+            aspect-ratio: 1;
+            background: white;
+            border: 3px solid #4ecdc4;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .puzzle-piece.empty {
+            background: rgba(255,255,255,0.3);
+            border: 3px dashed #ccc;
+            cursor: default;
+        }
+
+        .puzzle-piece.correct {
+            background: linear-gradient(135deg, #a8e6cf 0%, #4ecdc4 100%);
+            animation: pulse 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .options-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .option-piece {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 4px solid #ff6b6b;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option-piece:hover {
+            transform: scale(1.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .option-piece.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+
+        .ai-learning {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .ai-learning h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .ai-learning p {
+            color: #333;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 20px;
+            font-size: 1.3em;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .congrats {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .trophy {
+            font-size: 8em;
+            animation: rotate 2s infinite;
+        }
+
+        @keyframes rotate {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(360deg); }
+        }
+
+        .final-score {
+            font-size: 4em;
+            color: #4ecdc4;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">🏠 홈으로</button>
+            <h1>🧩 그림 퍼즐</h1>
+            <div class="score-box">
+                <div>점수</div>
+                <div class="score" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="ai-info">
+                <h3>🤖 AI 특징 추출 학습</h3>
+                <div class="feature-bar">
+                    <div class="feature-fill" id="featureFill">특징 인식 0%</div>
+                </div>
+                <p id="aiStatus">AI가 그림의 특징을 찾고 있어요!</p>
+            </div>
+
+            <div id="gameContent">
+                <div class="puzzle-area">
+                    <div class="question">빈 칸에 들어갈 조각을 찾아보세요!</div>
+                    
+                    <div class="puzzle-grid" id="puzzleGrid">
+                        <!-- 퍼즐 조각들 -->
+                    </div>
+
+                    <div class="options-area" id="optionsArea">
+                        <!-- 선택 가능한 조각들 -->
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <div class="ai-learning hidden" id="aiLearning">
+                    <h3>🤖 AI가 배운 것</h3>
+                    <p id="learningText"></p>
+                </div>
+
+                <button class="next-btn hidden" id="nextBtn" onclick="nextPuzzle()">다음 퍼즐</button>
+            </div>
+
+            <div id="endGame" class="hidden congrats">
+                <div class="trophy">🏆</div>
+                <h2 style="font-size: 2.5em; color: #4ecdc4; margin: 20px 0;">완벽해요!</h2>
+                <p style="font-size: 1.5em;">AI가 특징을 완벽하게 배웠어요!</p>
+                <div class="final-score" id="finalScore">0점</div>
+                <button class="next-btn" onclick="restartGame()">다시 하기</button>
+                <button class="back-btn" onclick="goHome()" style="margin-top: 10px;">홈으로 가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const puzzleTypes = [
+            { pattern: ['🌸', '🌼', '🌸', '🌼', '🌸', '🌼', '🌸', '🌼', '?'], answer: '🌸', options: ['🌸', '🌼', '🌺'] },
+            { pattern: ['🍎', '🍎', '🍌', '🍎', '🍎', '🍌', '🍎', '🍎', '?'], answer: '🍌', options: ['🍌', '🍎', '🍊'] },
+            { pattern: ['⭐', '🌙', '⭐', '🌙', '⭐', '🌙', '⭐', '🌙', '?'], answer: '⭐', options: ['⭐', '🌙', '☀️'] },
+            { pattern: ['🐶', '🐱', '🐶', '🐱', '🐶', '🐱', '🐶', '🐱', '?'], answer: '🐶', options: ['🐶', '🐱', '🐭'] },
+            { pattern: ['🔴', '🔴', '🔵', '🔴', '🔴', '🔵', '🔴', '🔴', '?'], answer: '🔵', options: ['🔵', '🔴', '🟢'] },
+            { pattern: ['🎈', '🎈', '🎈', '🎁', '🎈', '🎈', '🎈', '🎁', '?'], answer: '🎈', options: ['🎈', '🎁', '🎀'] },
+            { pattern: ['🌲', '🌳', '🌲', '🌳', '🌲', '🌳', '🌲', '🌳', '?'], answer: '🌲', options: ['🌲', '🌳', '🌴'] },
+            { pattern: ['🚗', '🚙', '🚗', '🚙', '🚗', '🚙', '🚗', '🚙', '?'], answer: '🚗', options: ['🚗', '🚙', '🚕'] },
+        ];
+
+        let score = 0;
+        let currentPuzzle = 0;
+        let correctCount = 0;
+        let selectedOption = null;
+
+        const learningMessages = [
+            'AI는 그림들을 보고 어떤 패턴이 반복되는지 찾아요!',
+            'AI는 각 그림의 특징(색깔, 모양)을 기억하고 있어요!',
+            'AI가 패턴을 이해하기 시작했어요. 다음에 무엇이 올지 예측할 수 있어요!',
+            'AI는 이제 완벽하게 패턴을 이해했어요. 이것이 특징 추출이에요!'
+        ];
+
+        function createPuzzle() {
+            if (currentPuzzle >= puzzleTypes.length) {
+                endGame();
+                return;
+            }
+
+            const puzzle = puzzleTypes[currentPuzzle];
+            const puzzleGrid = document.getElementById('puzzleGrid');
+            const optionsArea = document.getElementById('optionsArea');
+            
+            puzzleGrid.innerHTML = '';
+            optionsArea.innerHTML = '';
+            
+            // 퍼즐 그리드 생성
+            puzzle.pattern.forEach((piece, index) => {
+                const div = document.createElement('div');
+                div.className = 'puzzle-piece';
+                if (piece === '?') {
+                    div.className += ' empty';
+                    div.id = 'emptySlot';
+                    div.textContent = '?';
+                } else {
+                    div.textContent = piece;
+                }
+                puzzleGrid.appendChild(div);
+            });
+
+            // 옵션 생성
+            puzzle.options.forEach(option => {
+                const div = document.createElement('div');
+                div.className = 'option-piece';
+                div.textContent = option;
+                div.onclick = () => selectOption(option);
+                optionsArea.appendChild(div);
+            });
+
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('aiLearning').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            selectedOption = null;
+
+            updateAIStatus();
+        }
+
+        function selectOption(option) {
+            if (selectedOption !== null) return;
+
+            selectedOption = option;
+            const puzzle = puzzleTypes[currentPuzzle];
+            const emptySlot = document.getElementById('emptySlot');
+            const options = document.querySelectorAll('.option-piece');
+
+            options.forEach(opt => {
+                if (opt.textContent === option) {
+                    opt.classList.add('used');
+                }
+            });
+
+            emptySlot.textContent = option;
+
+            if (option === puzzle.answer) {
+                score += 15;
+                correctCount++;
+                emptySlot.classList.add('correct');
+                
+                document.getElementById('feedback').innerHTML = '정답이에요! 🎉<br>AI가 패턴을 배웠어요!';
+                document.getElementById('feedback').style.color = '#4ecdc4';
+            } else {
+                document.getElementById('feedback').innerHTML = '아쉬워요! 😢<br>정답은 ' + puzzle.answer + ' 이었어요!';
+                document.getElementById('feedback').style.color = '#ff6b6b';
+            }
+
+            document.getElementById('score').textContent = score;
+            
+            const messageIndex = Math.floor(currentPuzzle / 2);
+            document.getElementById('learningText').textContent = learningMessages[Math.min(messageIndex, learningMessages.length - 1)];
+            document.getElementById('aiLearning').classList.remove('hidden');
+            
+            document.getElementById('nextBtn').classList.remove('hidden');
+            updateAIStatus();
+        }
+
+        function updateAIStatus() {
+            const progress = Math.floor((correctCount / puzzleTypes.length) * 100);
+            const fill = document.getElementById('featureFill');
+            fill.style.width = progress + '%';
+            fill.textContent = '특징 인식 ' + progress + '%';
+
+            if (progress >= 75) {
+                document.getElementById('aiStatus').textContent = 'AI가 패턴을 완벽하게 이해했어요!';
+            } else if (progress >= 50) {
+                document.getElementById('aiStatus').textContent = 'AI가 패턴을 잘 이해하고 있어요!';
+            } else if (progress >= 25) {
+                document.getElementById('aiStatus').textContent = 'AI가 패턴을 배우고 있어요!';
+            } else {
+                document.getElementById('aiStatus').textContent = 'AI가 그림의 특징을 찾고 있어요!';
+            }
+        }
+
+        function nextPuzzle() {
+            currentPuzzle++;
+            createPuzzle();
+        }
+
+        function endGame() {
+            document.getElementById('gameContent').classList.add('hidden');
+            document.getElementById('endGame').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score + '점';
+
+            const bestScore = localStorage.getItem('aiGame_puzzle') || 0;
+            if (score > bestScore) {
+                localStorage.setItem('aiGame_puzzle', score);
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            currentPuzzle = 0;
+            correctCount = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('gameContent').classList.remove('hidden');
+            document.getElementById('endGame').classList.add('hidden');
+            createPuzzle();
+        }
+
+        function goHome() {
+            alert('메인 페이지(index.html)로 돌아갑니다!');
+            // 실제 구현시: window.location.href = 'index.html';
+        }
+
+        // 게임 시작
+        createPuzzle();
+    </script>
+</body>
+</html>
