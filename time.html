@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시계 맞추기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #ffa500;
+        }
+
+        .score-box {
+            text-align: right;
+        }
+
+        .score {
+            font-size: 2em;
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .ai-prediction {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ai-prediction h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .prediction-bar {
+            background: white;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .prediction-fill {
+            background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .clock-area {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .question {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .clock {
+            width: 250px;
+            height: 250px;
+            border: 8px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: white;
+            margin: 0 auto 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .clock-center {
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .clock-number {
+            position: absolute;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            background: #333;
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+            transition: transform 0.5s;
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 95px;
+            background: #666;
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            border-radius: 2px 2px 0 0;
+            transition: transform 0.5s;
+        }
+
+        .time-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .time-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 4px solid #ffa500;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.5em;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .time-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .time-btn.correct {
+            background: linear-gradient(135deg, #a8e6cf 0%, #4ecdc4 100%);
+            animation: correct 0.6s;
+        }
+
+        .time-btn.wrong {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            animation: shake 0.5s;
+        }
+
+        @keyframes correct {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+
+        .ai-learning {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .ai-learning h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .ai-learning p {
+            color: #333;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #ffd93d 0%, #ffb347 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 20px;
+            font-size: 1.3em;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .congrats {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .trophy {
+            font-size: 8em;
+            animation: swing 1s infinite;
+        }
+
+        @keyframes swing {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        .final-score {
+            font-size: 4em;
+            color: #ffa500;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">🏠 홈으로</button>
+            <h1>⏰ 시계 맞추기</h1>
+            <div class="score-box">
+                <div>점수</div>
+                <div class="score" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="ai-prediction">
+                <h3>🤖 AI 시간 예측 학습</h3>
+                <div class="prediction-bar">
+                    <div class="prediction-fill" id="predictionFill">예측 정확도 0%</div>
+                </div>
+                <p id="aiStatus">AI가 시간 패턴을 배우고 있어요!</p>
+            </div>
+
+            <div id="gameContent">
+                <div class="clock-area">
+                    <div class="question">지금 몇 시일까요?</div>
+                    
+                    <div class="clock" id="clock">
+                        <div class="clock-center"></div>
+                        <div class="hour-hand" id="hourHand"></div>
+                        <div class="minute-hand" id="minuteHand"></div>
+                    </div>
+
+                    <div class="time-options" id="timeOptions">
+                        <!-- 시간 선택 버튼들 -->
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <div class="ai-learning hidden" id="aiLearning">
+                    <h3>🤖 AI가 배운 것</h3>
+                    <p id="learningText"></p>
+                </div>
+
+                <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">다음 문제</button>
+            </div>
+
+            <div id="endGame" class="hidden congrats">
+                <div class="trophy">🏆</div>
+                <h2 style="font-size: 2.5em; color: #ffa500; margin: 20px 0;">완벽해요!</h2>
+                <p style="font-size: 1.5em;">AI가 시간을 완벽하게 예측해요!</p>
+                <div class="final-score" id="finalScore">0점</div>
+                <button class="next-btn" onclick="restartGame()">다시 하기</button>
+                <button class="back-btn" onclick="goHome()" style="margin-top: 10px;">홈으로 가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentQuestion = 0;
+        let correctCount = 0;
+        let totalQuestions = 8;
+        let currentTime = { hour: 0, minute: 0 };
+
+        const learningMessages = [
+            'AI는 시계의 바늘 위치를 보고 시간을 배워요!',
+            'AI가 시침과 분침의 관계를 이해하기 시작했어요!',
+            'AI는 이제 시간의 패턴을 알고 있어요. 다음 시간을 예측할 수 있어요!',
+            'AI가 완벽하게 시간을 예측할 수 있어요. 이것이 시계열 예측이에요!'
+        ];
+
+        function setupClock() {
+            const clock = document.getElementById('clock');
+            const numbers = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+            const radius = 100;
+            
+            numbers.forEach((num, index) => {
+                const angle = (index * 30 - 90) * Math.PI / 180;
+                const x = 125 + radius * Math.cos(angle);
+                const y = 125 + radius * Math.sin(angle);
+                
+                const numberDiv = document.createElement('div');
+                numberDiv.className = 'clock-number';
+                numberDiv.textContent = num;
+                numberDiv.style.left = x - 10 + 'px';
+                numberDiv.style.top = y - 12 + 'px';
+                clock.appendChild(numberDiv);
+            });
+        }
+
+        function generateQuestion() {
+            // 간단한 시간 생성 (정각 또는 30분)
+            const hour = Math.floor(Math.random() * 12) + 1;
+            const minute = Math.random() < 0.5 ? 0 : 30;
+            
+            currentTime = { hour, minute };
+            
+            setClockHands(hour, minute);
+            generateOptions(hour, minute);
+            
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('aiLearning').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            
+            currentQuestion++;
+            updateAIStatus();
+        }
+
+        function setClockHands(hour, minute) {
+            const hourHand = document.getElementById('hourHand');
+            const minuteHand = document.getElementById('minuteHand');
+            
+            const hourAngle = (hour * 30) + (minute * 0.5);
+            const minuteAngle = minute * 6;
+            
+            hourHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
+            minuteHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
+        }
+
+        function generateOptions(correctHour, correctMinute) {
+            const optionsDiv = document.getElementById('timeOptions');
+            optionsDiv.innerHTML = '';
+            
+            const correctAnswer = formatTime(correctHour, correctMinute);
+            const options = [correctAnswer];
+            
+            // 다른 옵션들 생성
+            while (options.length < 4) {
+                const h = Math.floor(Math.random() * 12) + 1;
+                const m = Math.random() < 0.5 ? 0 : 30;
+                const option = formatTime(h, m);
+                if (!options.includes(option)) {
+                    options.push(option);
+                }
+            }
+            
+            // 옵션 섞기
+            options.sort(() => Math.random() - 0.5);
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'time-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option, correctAnswer, btn);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function formatTime(hour, minute) {
+            return `${hour}시 ${minute === 0 ? '정각' : '30분'}`;
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            const buttons = document.querySelectorAll('.time-btn');
+            buttons.forEach(b => b.disabled = true);
+            
+            if (selected === correct) {
+                score += 12;
+                correctCount++;
+                btn.classList.add('correct');
+                
+                document.getElementById('feedback').innerHTML = '정답이에요! 🎉<br>AI가 시간을 배웠어요!';
+                document.getElementById('feedback').style.color = '#4ecdc4';
+            } else {
+                btn.classList.add('wrong');
+                
+                const correctBtn = Array.from(buttons).find(b => b.textContent === correct);
+                if (correctBtn) correctBtn.classList.add('correct');
+                
+                document.getElementById('feedback').innerHTML = '아쉬워요! 😢<br>정답은 ' + correct + '이에요!';
+                document.getElementById('feedback').style.color = '#ff6b6b';
+            }
+            
+            document.getElementById('score').textContent = score;
+            
+            const messageIndex = Math.floor(currentQuestion / 2);
+            document.getElementById('learningText').textContent = learningMessages[Math.min(messageIndex, learningMessages.length - 1)];
+            document.getElementById('aiLearning').classList.remove('hidden');
+            
+            document.getElementById('nextBtn').classList.remove('hidden');
+            updateAIStatus();
+        }
+
+        function updateAIStatus() {
+            const progress = Math.floor((correctCount / totalQuestions) * 100);
+            const fill = document.getElementById('predictionFill');
+            fill.style.width = progress + '%';
+            fill.textContent = '예측 정확도 ' + progress + '%';
+            
+            if (progress >= 75) {
+                document.getElementById('aiStatus').textContent = 'AI가 시간을 완벽하게 예측해요!';
+            } else if (progress >= 50) {
+                document.getElementById('aiStatus').textContent = 'AI가 시간 패턴을 잘 이해했어요!';
+            } else if (progress >= 25) {
+                document.getElementById('aiStatus').textContent = 'AI가 시간을 배우고 있어요!';
+            } else {
+                document.getElementById('aiStatus').textContent = 'AI가 시간 패턴을 배우고 있어요!';
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                endGame();
+            } else {
+                generateQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameContent').classList.add('hidden');
+            document.getElementById('endGame').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score + '점';
+            
+            const bestScore = localStorage.getItem('aiGame_time') || 0;
+            if (score > bestScore) {
+                localStorage.setItem('aiGame_time', score);
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            currentQuestion = 0;
+            correctCount = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('gameContent').classList.remove('hidden');
+            document.getElementById('endGame').classList.add('hidden');
+            generateQuestion();
+        }
+
+        function goHome() {
+            alert('메인 페이지(index.html)로 돌아갑니다!');
+            // 실제 구현시: window.location.href = 'index.html';
+        }
+
+        // 게임 시작
+        setupClock();
+        generateQuestion();
+    </script>
+</body>
+</html>
