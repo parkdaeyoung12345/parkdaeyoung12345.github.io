@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도형 찾기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        .score-box {
+            text-align: right;
+        }
+
+        .score {
+            font-size: 2em;
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .ai-status {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ai-level {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .learning-bar {
+            background: white;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .learning-fill {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            height: 100%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .shape-display {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .shape {
+            font-size: 8em;
+            margin: 20px 0;
+            animation: popIn 0.5s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .question {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 4px solid #ff6b6b;
+            padding: 25px;
+            border-radius: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(135deg, #a8e6cf 0%, #4ecdc4 100%);
+            animation: correct 0.6s;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            animation: shake 0.5s;
+        }
+
+        @keyframes correct {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 50px;
+        }
+
+        .ai-explanation {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .ai-explanation h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .ai-explanation p {
+            color: #333;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 20px;
+            font-size: 1.3em;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .next-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .congrats {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .congrats h2 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 4em;
+            color: #f5576c;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .trophy {
+            font-size: 8em;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goHome()">🏠 홈으로</button>
+            <h1>🔵 도형 찾기</h1>
+            <div class="score-box">
+                <div>점수</div>
+                <div class="score" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="ai-status">
+                <div class="ai-level" id="aiLevel">🤖 AI 학습 단계: 초보</div>
+                <div class="learning-bar">
+                    <div class="learning-fill" id="learningFill">학습률 0%</div>
+                </div>
+                <p id="aiMessage">AI가 도형을 배우고 있어요!</p>
+            </div>
+
+            <div id="gameContent">
+                <div class="shape-display">
+                    <div class="question">이 도형은 무엇일까요?</div>
+                    <div class="shape" id="shape">●</div>
+                </div>
+
+                <div class="options" id="options">
+                    <button class="option-btn" onclick="checkAnswer('원')">🔵 원</button>
+                    <button class="option-btn" onclick="checkAnswer('네모')">🟦 네모</button>
+                    <button class="option-btn" onclick="checkAnswer('세모')">🔺 세모</button>
+                    <button class="option-btn" onclick="checkAnswer('별')">⭐ 별</button>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+
+                <div class="ai-explanation hidden" id="explanation">
+                    <h3>🤖 AI가 배운 것</h3>
+                    <p id="explanationText"></p>
+                </div>
+
+                <button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">다음 문제</button>
+            </div>
+
+            <div id="endGame" class="hidden congrats">
+                <div class="trophy">🏆</div>
+                <h2>축하합니다!</h2>
+                <p style="font-size: 1.5em; margin-bottom: 10px;">AI가 완전히 학습했어요!</p>
+                <div class="final-score" id="finalScore">0점</div>
+                <button class="next-btn" onclick="restartGame()">다시 하기</button>
+                <button class="back-btn" onclick="goHome()" style="margin-top: 10px;">홈으로 가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const shapes = {
+            '원': '●',
+            '네모': '■',
+            '세모': '▲',
+            '별': '★'
+        };
+
+        const colors = ['🔵', '🟦', '🔺', '⭐'];
+
+        let score = 0;
+        let correctCount = 0;
+        let totalQuestions = 10;
+        let currentQuestion = 0;
+        let currentShape = '';
+
+        const aiLevels = [
+            { name: '초보', threshold: 0, message: 'AI가 도형을 배우고 있어요!' },
+            { name: '배우는 중', threshold: 3, message: 'AI가 패턴을 찾고 있어요!' },
+            { name: '익숙함', threshold: 6, message: 'AI가 도형을 잘 이해하고 있어요!' },
+            { name: '전문가', threshold: 9, message: 'AI가 완벽하게 학습했어요!' }
+        ];
+
+        const explanations = [
+            'AI는 여러분이 가르쳐준 도형을 기억해요. 이것을 "데이터 학습"이라고 해요!',
+            'AI는 동그란 모양은 원, 네모난 모양은 네모라는 걸 배우고 있어요!',
+            'AI가 점점 더 똑똑해지고 있어요. 많이 배울수록 정확해진답니다!',
+            'AI는 이제 새로운 도형을 봐도 무엇인지 알 수 있어요. 이것이 딥러닝이에요!'
+        ];
+
+        function generateQuestion() {
+            const shapeNames = Object.keys(shapes);
+            currentShape = shapeNames[Math.floor(Math.random() * shapeNames.length)];
+            document.getElementById('shape').textContent = shapes[currentShape];
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('explanation').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('correct', 'wrong');
+                btn.disabled = false;
+            });
+
+            currentQuestion++;
+            updateAIStatus();
+        }
+
+        function checkAnswer(answer) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (answer === currentShape) {
+                score += 10;
+                correctCount++;
+                
+                const correctBtn = Array.from(buttons).find(btn => btn.textContent.includes(answer));
+                correctBtn.classList.add('correct');
+                
+                document.getElementById('feedback').innerHTML = '정답이에요! 🎉<br>AI가 하나 더 배웠어요!';
+                document.getElementById('feedback').style.color = '#4ecdc4';
+            } else {
+                const wrongBtn = Array.from(buttons).find(btn => btn.textContent.includes(answer));
+                wrongBtn.classList.add('wrong');
+                
+                const correctBtn = Array.from(buttons).find(btn => btn.textContent.includes(currentShape));
+                correctBtn.classList.add('correct');
+                
+                document.getElementById('feedback').innerHTML = '아쉬워요! 😢<br>정답은 ' + currentShape + '이에요!';
+                document.getElementById('feedback').style.color = '#ff6b6b';
+            }
+
+            document.getElementById('score').textContent = score;
+            
+            const explanationIndex = Math.floor(correctCount / 3);
+            document.getElementById('explanationText').textContent = explanations[Math.min(explanationIndex, explanations.length - 1)];
+            document.getElementById('explanation').classList.remove('hidden');
+            
+            document.getElementById('nextBtn').classList.remove('hidden');
+
+            updateAIStatus();
+        }
+
+        function updateAIStatus() {
+            const learningRate = Math.floor((correctCount / totalQuestions) * 100);
+            document.getElementById('learningFill').style.width = learningRate + '%';
+            document.getElementById('learningFill').textContent = '학습률 ' + learningRate + '%';
+
+            let currentLevel = aiLevels[0];
+            for (let level of aiLevels) {
+                if (correctCount >= level.threshold) {
+                    currentLevel = level;
+                }
+            }
+
+            document.getElementById('aiLevel').textContent = '🤖 AI 학습 단계: ' + currentLevel.name;
+            document.getElementById('aiMessage').textContent = currentLevel.message;
+        }
+
+        function nextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                endGame();
+            } else {
+                generateQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameContent').classList.add('hidden');
+            document.getElementById('endGame').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score + '점';
+
+            const bestScore = localStorage.getItem('aiGame_shapes') || 0;
+            if (score > bestScore) {
+                localStorage.setItem('aiGame_shapes', score);
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            correctCount = 0;
+            currentQuestion = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('gameContent').classList.remove('hidden');
+            document.getElementById('endGame').classList.add('hidden');
+            generateQuestion();
+        }
+
+        function goHome() {
+            alert('메인 페이지(index.html)로 돌아갑니다!');
+            // 실제 구현시: window.location.href = 'index.html';
+        }
+
+        // 게임 시작
+        generateQuestion();
+    </script>
+</body>
+</html>
