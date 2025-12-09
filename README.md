@@ -54,14 +54,14 @@ AI는 **데이터 속 규칙을 배우는 과정**을 반복합니다.
 
 ## 📁 프로젝트 구조
 root/
-│── index.html # 메인 랜딩 페이지 (AI Jelly Playground)
-│── README.md # 프로젝트 안내 문서
-│
-└── game/ # 게임 페이지 폴더
-├── shapes.html # 도형 찾기 게임
-├── puzzle.html # 퍼즐 게임
-├── time.html # 시계 맞추기 게임
-└── pattern.html # 무늬 예측 게임
+    index.html
+    README.md
+    
+    game/
+        shapes.html
+        puzzle.html
+        time.html
+        pattern.html
 
 ---
 
